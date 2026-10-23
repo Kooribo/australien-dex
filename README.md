@@ -8,7 +8,11 @@ Ein Pokédex fürs Handy für den Roadtrip an der Ostküste Australiens (Melbour
 - Filter nach Lebensraum, Stopp auf der Route, gefunden/offen und gefährlichen Tieren
 - Abhaken zum Sammeln: Gefundene Tiere werden farbig, der Stand bleibt im Browser des Handys gespeichert
 
-Öffnen: `index.html` im Browser, oder über GitHub Pages (Settings → Pages → Branch auswählen).
+Öffnen: über GitHub Pages (Repo öffentlich machen, dann Settings → Pages → Branch auswählen).
+
+**Offline:** Die Seite einmal mit Internet öffnen, dann speichert sie alle Tiere und Fotos auf dem Handy (unter „Sicherheit“ erscheint „Offline bereit“). Danach läuft sie ohne Empfang. Am besten vorher zum Home-Bildschirm hinzufügen und nur noch darüber öffnen.
+
+Nach Änderungen an Dateien in `sw.js` die `VERSION` erhöhen, damit die Handys die neue Fassung laden.
 
 Dateien: `data.js` (Tierdaten und Route), `credits.js` (Bildnachweise), `img/` (Fotos).
 
