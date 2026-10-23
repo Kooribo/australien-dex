@@ -402,7 +402,7 @@ dialog::backdrop { background: rgba(6, 10, 8, .6); }
 
   const state = { q: "", typ: "", ort: "", sort: "gross", open: false, done: false, danger: false };
   const nr = n => "#" + String(n).padStart(3, "0");
-  const img = t => `img/${t.k}.jpg`;
+  const img = t => t.bild || `img/${t.k}.jpg`;
   const diamond = g => `<span class="diamond d${g}" title="Gefahr ${g} von 5"><span>${g}</span></span>`;
   const sizeShort = t => t.cm >= 100 ? (t.cm / 100).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " m" : t.cm.toLocaleString("de-DE") + " cm";
 
@@ -474,7 +474,7 @@ dialog::backdrop { background: rgba(6, 10, 8, .6); }
         <img src="${img(t)}" alt="${esc(t.de)}">
         <span class="nr">${nr(t.nr)}</span>
         <button class="close" id="close" aria-label="Schließen">×</button>
-        ${c ? `<div class="credit">Foto: ${esc(c.by)} · ${esc(c.lic)} · <a href="${esc(c.url)}" target="_blank" rel="noopener">iNaturalist</a></div>` : ""}
+        ${c ? `<div class="credit">${c.zeichnung ? esc(c.zeichnung) : `Foto: ${esc(c.by)} · ${esc(c.lic)}`} · <a href="${esc(c.url)}" target="_blank" rel="noopener">iNaturalist</a></div>` : ""}
       </div>
       <div class="body">
         <div class="names">

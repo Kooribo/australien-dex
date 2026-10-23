@@ -439,5 +439,6 @@ window.CREDITS = {
 "by": "jitensha2021",
 "lic": "CC-BY-NC",
 "url": "https://www.inaturalist.org/photos/133718432"
-}
+},
+"irukandji": {"zeichnung": "Zeichnung: Von dieser winzigen Qualle gibt es kaum frei lizenzierte Fotos", "url": "https://www.inaturalist.org/taxa/632189"}
 };

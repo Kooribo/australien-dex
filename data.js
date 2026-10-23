@@ -455,7 +455,7 @@ const TIERE = [
     fakt: "Eine der größten Ameisen der Welt, mit riesigen Kiefern und sehr guten Augen. Sie verfolgt Eindringlinge aktiv.",
     gefahr: 3, tipp: "Der Stich ist sehr schmerzhaft und kann für Allergiker gefährlich werden.", orte: ["can", "syd", "bne"], chance: "mittel" },
 
-  { k: "irukandji", de: "Irukandji-Qualle", en: "Irukandji Jellyfish", la: "Carukia barnesi", typ: "wasser", gruppe: "Nesseltier",
+  { k: "irukandji", bild: "img/irukandji.svg", de: "Irukandji-Qualle", en: "Irukandji Jellyfish", la: "Carukia barnesi", typ: "wasser", gruppe: "Nesseltier",
     cm: 1.5, groesse: "Schirm 1–2 cm, Tentakel bis 1 m", gewicht: "unter 1 g", essen: "Kleine Fische, Plankton",
     fakt: "Kaum größer als ein Fingernagel und fast unsichtbar. Der Stich fühlt sich harmlos an, nach etwa 30 Minuten folgt das „Irukandji-Syndrom“ mit extremen Schmerzen und Bluthochdruck.",
     gefahr: 5, tipp: "Kommt auch draußen am Riff vor: Bei Schnorcheltouren Stinger-Suit tragen! Essig auf die Stelle und Notruf 000.", orte: ["whit", "cns"], chance: "selten" },

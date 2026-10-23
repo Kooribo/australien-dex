@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
+  <defs>
+    <linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d6f86"/><stop offset="1" stop-color="#0a2a3a"/></linearGradient>
+    <radialGradient id="b" cx=".5" cy=".35" r=".6"><stop offset="0" stop-color="#ffffff" stop-opacity=".75"/><stop offset="1" stop-color="#bfe9f2" stop-opacity=".25"/></radialGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#w)"/>
+  <g fill="#ffffff" opacity=".12"><circle cx="90" cy="70" r="3"/><circle cx="530" cy="110" r="2"/><circle cx="470" cy="380" r="3"/><circle cx="140" cy="330" r="2"/><circle cx="580" cy="250" r="2"/></g>
+  <g stroke="#e8fbff" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M276 196 C 266 260, 290 320, 262 400 S 270 460, 258 480"/>
+    <path d="M300 200 C 306 270, 284 330, 304 410 S 296 460, 306 480"/>
+    <path d="M340 200 C 334 270, 356 330, 336 410 S 344 460, 334 480"/>
+    <path d="M364 196 C 374 260, 350 320, 378 400 S 370 460, 382 480"/>
+  </g>
+  <g fill="#e8fbff" fill-opacity=".8">
+    <circle cx="268" cy="300" r="3"/><circle cx="292" cy="350" r="3"/><circle cx="346" cy="330" r="3"/><circle cx="372" cy="290" r="3"/><circle cx="262" cy="420" r="3"/><circle cx="378" cy="420" r="3"/>
+  </g>
+  <path d="M262 200 L268 130 Q320 100 372 130 L378 200 Q320 214 262 200 Z" fill="url(#b)" stroke="#ffffff" stroke-opacity=".8" stroke-width="2"/>
+  <path d="M290 196 L294 136 M350 196 L346 136" stroke="#ffffff" stroke-opacity=".35" stroke-width="2"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#ffffff">
+    <text x="24" y="250" font-size="22" font-weight="700" opacity=".9">Zeichnung</text>
+    <text x="24" y="276" font-size="16" opacity=".75">echte Größe: Schirm 1–2 cm</text>
+  </g>
+  <g stroke="#ffffff" stroke-width="2" opacity=".8"><path d="M420 120 v80 M414 120 h12 M414 200 h12"/></g>
+  <text x="434" y="166" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#ffffff" opacity=".85">≈ 1,5 cm</text>
+</svg>
