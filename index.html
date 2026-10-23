@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- app:start -->
+<title>Ostküsten-Dex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#1b2a23">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: Feldführer fürs Handy – sticky Kopf mit Fortschritt, Filterleiste, 2-spaltiges Karten-Raster, Detail als Bottom-Sheet. */
+:root {
+  --bg: #edf1ec;
+  --surface: #ffffff;
+  --surface-2: #f6f8f5;
+  --ink: #16201b;
+  --muted: #5a695f;
+  --line: #d3dcd4;
+  --head: #1b2a23;
+  --head-ink: #f3f1e6;
+  --sign: #f2b705;
+  --sign-ink: #111111;
+  --land: #a9562b;
+  --wasser: #0e7f86;
+  --luft: #3f78b8;
+  --g1: #3f9a4f;
+  --g2: #8aa823;
+  --g3: #e0a800;
+  --g4: #e06a12;
+  --g5: #d0281f;
+  --found: #2f8a45;
+  --shadow: 0 1px 2px rgba(20, 35, 28, .08), 0 4px 14px rgba(20, 35, 28, .06);
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1512; --surface: #18211c; --surface-2: #1d2722; --ink: #e7ede8; --muted: #9aaba0;
+    --line: #2b3832; --head: #0b110e; --head-ink: #f3f1e6;
+    --land: #d27a4a; --wasser: #2bb3b8; --luft: #6ea4e6;
+    --g1: #57b866; --g2: #a6c43a; --g3: #f0c020; --g4: #f08636; --g5: #f0524a; --found: #4fb866;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1512; --surface: #18211c; --surface-2: #1d2722; --ink: #e7ede8; --muted: #9aaba0;
+  --line: #2b3832; --head: #0b110e; --head-ink: #f3f1e6;
+  --land: #d27a4a; --wasser: #2bb3b8; --luft: #6ea4e6;
+  --g1: #57b866; --g2: #a6c43a; --g3: #f0c020; --g4: #f08636; --g5: #f0524a; --found: #4fb866;
+  --shadow: 0 1px 2px rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.45 var(--f-body);
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 30; background: var(--head);
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--sign); outline-offset: 2px; }
+
+.wrap {
+  max-width: 1100px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Kopf */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--head); color: var(--head-ink);
+  box-shadow: 0 2px 10px rgba(0,0,0,.18);
+}
+.top .wrap { padding-block: 10px 12px; display: grid; gap: 8px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.sign {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+  background: var(--sign); color: var(--sign-ink); border: 2px solid var(--sign-ink);
+  border-radius: 5px; transform: rotate(45deg);
+  box-shadow: 0 0 0 2px var(--sign);
+}
+.sign svg { transform: rotate(-45deg); width: 22px; height: 22px; }
+.brand h1 {
+  margin: 0; font: 900 30px/1 var(--f-display); letter-spacing: .5px; text-transform: uppercase;
+}
+.brand .sub { font-size: 12.5px; opacity: .75; letter-spacing: .3px; }
+.count { margin-left: auto; text-align: right; font-family: var(--f-mono); font-weight: 700; }
+.count b { font-size: 22px; color: var(--sign); }
+.count span { font-size: 13px; opacity: .8; }
+.bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--sign); transition: width .4s ease; }
+
+.tabs { display: flex; gap: 4px; }
+.tabs button {
+  flex: 1; border: 0; border-radius: 8px; padding: 7px 4px; background: transparent;
+  color: var(--head-ink); opacity: .7; font-weight: 700; font-size: 14px;
+}
+.tabs button[aria-selected="true"] { background: rgba(255,255,255,.12); opacity: 1; }
+
+/* Filter */
+.filters { display: grid; gap: 10px; padding-block: 14px 6px; }
+.search {
+  width: 100%; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 10px; padding: 11px 14px; font-size: 16px;
+}
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; flex: 1 1 100%; }
+.seg button {
+  flex: 1; border: 0; background: transparent; border-radius: 7px; padding: 7px 2px; font-size: 14px; font-weight: 700; color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.seg button[data-typ="land"] .dot { background: var(--land); }
+.seg button[data-typ="wasser"] .dot { background: var(--wasser); }
+.seg button[data-typ="luft"] .dot { background: var(--luft); }
+select {
+  flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 10px; padding: 9px 10px; font-size: 14.5px;
+}
+.chip {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 6px 12px; font-size: 13.5px; font-weight: 700; color: var(--muted);
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip.danger[aria-pressed="true"] { background: var(--g5); border-color: var(--g5); color: #fff; }
+.here {
+  display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px dashed var(--line);
+  border-radius: 10px; padding: 9px 12px; font-size: 14px;
+}
+.here button { margin-left: auto; flex: none; }
+.result { font-size: 13px; color: var(--muted); padding-bottom: 8px; }
+
+/* Raster */
+.grid {
+  display: grid; gap: 12px; padding-bottom: 40px;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+}
+.card {
+  position: relative; display: flex; flex-direction: column; text-align: left;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 12px; overflow: hidden;
+  padding: 0; box-shadow: var(--shadow); min-width: 0;
+}
+.card .pic { position: relative; aspect-ratio: 4 / 3; background: var(--surface-2); overflow: hidden; }
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1) contrast(.95); transition: filter .3s; }
+.card.found img { filter: none; }
+.nr {
+  position: absolute; left: 6px; top: 6px; font: 700 12px/1 var(--f-mono);
+  background: rgba(10,15,12,.72); color: #fff; padding: 4px 6px; border-radius: 5px;
+}
+.card .diamond { position: absolute; right: 8px; top: 8px; }
+.check {
+  position: absolute; right: 6px; bottom: 6px; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--found); color: #fff; border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.check svg { width: 16px; height: 16px; }
+.card:not(.found) .check { display: none; }
+.card .txt { padding: 8px 10px 10px; display: grid; gap: 1px; min-width: 0; border-top: 3px solid var(--c, var(--line)); }
+.card[data-typ="land"] { --c: var(--land); }
+.card[data-typ="wasser"] { --c: var(--wasser); }
+.card[data-typ="luft"] { --c: var(--luft); }
+.card .de { font: 800 19px/1.05 var(--f-display); text-transform: uppercase; letter-spacing: .2px; overflow-wrap: anywhere; }
+.card .en { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .meta { display: flex; justify-content: space-between; gap: 6px; font: 500 12px/1.3 var(--f-mono); color: var(--muted); margin-top: 4px; }
+.card .meta .typ { color: var(--c); font-weight: 700; }
+.empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 40px 10px; }
+
+/* Gefahr-Raute */
+.diamond {
+  width: 30px; height: 30px; display: grid; place-items: center;
+}
+.diamond::before {
+  content: ""; position: absolute; width: 21px; height: 21px; transform: rotate(45deg);
+  background: var(--g); border: 2px solid #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+.diamond span { position: relative; font: 700 13px/1 var(--f-mono); color: #fff; }
+.d1 { --g: var(--g1); } .d2 { --g: var(--g2); } .d3 { --g: var(--g3); } .d4 { --g: var(--g4); } .d5 { --g: var(--g5); }
+.d2 span, .d3 span { color: #111; }
+
+/* Detail */
+dialog {
+  border: 0; padding: 0; width: min(640px, 100%); max-width: 100%; max-height: 92vh; max-height: 92dvh;
+  border-radius: 18px 18px 0 0; margin: auto auto 0; background: var(--surface); color: var(--ink);
+  overflow: hidden;
+}
+@media (min-width: 700px) { dialog { border-radius: 18px; margin: auto; } }
+dialog::backdrop { background: rgba(6, 10, 8, .6); }
+.sheet { max-height: inherit; overflow-y: auto; overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.hero { position: relative; aspect-ratio: 3 / 2; background: var(--surface-2); max-width: 100%; }
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.close {
+  position: absolute; right: 10px; top: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0;
+  background: rgba(10,15,12,.7); color: #fff; font-size: 22px; line-height: 1;
+}
+.hero .nr { font-size: 14px; left: 10px; top: 10px; padding: 6px 8px; }
+.credit {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 10px 5px; font-size: 10.5px; color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,.6)); text-align: right;
+}
+.credit a { color: #fff; }
+.body { padding: 16px max(18px, env(safe-area-inset-left, 0px)) 22px; display: grid; gap: 16px; }
+.names h2 { margin: 0; font: 900 34px/1 var(--f-display); text-transform: uppercase; text-wrap: balance; }
+.names .en2 { font-size: 16px; margin-top: 4px; }
+.names .la { font-style: italic; color: var(--muted); }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.tag.typ { color: #fff; border-color: transparent; }
+.tag.typ.land { background: var(--land); } .tag.typ.wasser { background: var(--wasser); } .tag.typ.luft { background: var(--luft); }
+
+.gefahr { border: 2px solid var(--g); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; background: var(--surface-2); }
+.gefahr .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gefahr .lbl { font: 800 18px/1 var(--f-display); text-transform: uppercase; letter-spacing: .4px; }
+.scale { display: flex; gap: 4px; margin-left: auto; }
+.scale i { width: 14px; height: 14px; transform: rotate(45deg); border-radius: 2px; background: var(--line); }
+.scale i.on { background: var(--g); }
+.gefahr p { margin: 0; font-size: 15px; }
+
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; margin: 0; }
+.facts dt { font: 700 12px/1.6 var(--f-mono); text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.facts dd { margin: 0; min-width: 0; }
+.fun { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border-left: 4px solid var(--sign); }
+.where { display: grid; gap: 8px; }
+.wl { font: 700 12px/1 var(--f-mono); text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.stops { display: flex; gap: 6px; flex-wrap: wrap; }
+.collect {
+  width: 100%; border: 0; border-radius: 12px; padding: 15px; font: 800 20px/1 var(--f-display);
+  text-transform: uppercase; letter-spacing: .6px; background: var(--sign); color: var(--sign-ink);
+}
+.collect.on { background: var(--found); color: #fff; }
+.when { text-align: center; font-size: 13px; color: var(--muted); margin-top: -8px; }
+
+/* Route & Sicherheit */
+.panel { padding-block: 16px 40px; display: grid; gap: 14px; }
+.panel h2 { margin: 6px 0 0; font: 900 26px/1 var(--f-display); text-transform: uppercase; }
+.panel p { margin: 0; max-width: 65ch; }
+.route { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.route li { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: start; }
+.route .pin { position: relative; height: 100%; display: flex; justify-content: center; }
+.route .pin::before { content: ""; position: absolute; top: 0; bottom: 0; width: 3px; background: var(--line); }
+.route li:first-child .pin::before { top: 18px; }
+.route li:last-child .pin::before { bottom: calc(100% - 18px); }
+.route .pin b {
+  position: relative; margin-top: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface);
+  border: 3px solid var(--ink); font: 700 10px/14px var(--f-mono); text-align: center;
+}
+.route li.now .pin b { background: var(--sign); border-color: var(--sign-ink); color: var(--sign-ink); }
+.route button.stop {
+  text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px;
+  margin-bottom: 10px; display: grid; gap: 3px; min-width: 0; grid-column: 2 / 4;
+}
+.route .stop strong { font: 800 19px/1.1 var(--f-display); text-transform: uppercase; }
+.route .stop .d { font: 500 12.5px var(--f-mono); color: var(--muted); }
+.route .stop .p { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.route .stop .p .bar { flex: 1; background: var(--line); height: 5px; }
+.route .stop .p .bar i { background: var(--found); }
+.legend { display: grid; gap: 8px; }
+.legend div { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.legend .diamond { position: relative; flex: none; }
+.legend b { display: block; }
+.legend small { color: var(--muted); }
+.sos { background: var(--surface); border: 2px solid var(--g5); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.sos .num { font: 900 46px/1 var(--f-display); color: var(--g5); }
+.sos ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 14px; font-weight: 700; }
+.btn.warn { border-color: var(--g5); color: var(--g5); }
+.foot { font-size: 12px; color: var(--muted); }
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; font-size: 14px;
+  opacity: 0; pointer-events: none; transition: .25s; z-index: 50; max-width: calc(100% - 32px); text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="sign" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="currentColor"><path d="M45 5c2 2 2 6 1 9l5 3c2 1 3 3 2 4l-6 1c-1 3-3 5-6 6 1 4 1 8-1 12l5 5h6c1 0 1 2 0 2H37l-3-5c-3 1-7 0-10-2L7 51c-2 1-3-1-2-2l16-10c-1-6 2-12 7-15 3-2 7-2 10-2l2-6c1-4 3-8 5-11z"/><path d="M40 31l6 4-1 2-6-3z"/></svg>
+      </div>
+      <div>
+        <h1>Ostküsten-Dex</h1>
+        <div class="sub">Melbourne → Cairns · 25.10.–19.11.</div>
+      </div>
+      <div class="count" aria-live="polite"><b id="cFound">0</b><span>/<span id="cTotal">0</span></span></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-dex" aria-selected="true" data-view="dex">Dex</button>
+      <button role="tab" id="tab-route" aria-selected="false" data-view="route">Route</button>
+      <button role="tab" id="tab-info" aria-selected="false" data-view="info">Sicherheit</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="view-dex" class="wrap">
+    <div class="filters">
+      <input id="q" class="search" type="search" placeholder="Suchen: deutsch, english, lateinisch …" autocomplete="off" aria-label="Tier suchen">
+      <div class="seg" id="typ" role="group" aria-label="Lebensraum">
+        <button data-typ="" aria-pressed="true">Alle</button>
+        <button data-typ="land" aria-pressed="false"><span class="dot"></span>Land</button>
+        <button data-typ="wasser" aria-pressed="false"><span class="dot"></span>Wasser</button>
+        <button data-typ="luft" aria-pressed="false"><span class="dot"></span>Luft</button>
+      </div>
+      <div class="row">
+        <select id="ort" aria-label="Ort auf der Route"><option value="">Ganze Route</option></select>
+        <select id="sort" aria-label="Sortierung">
+          <option value="gross">Größe: groß → klein</option>
+          <option value="klein">Größe: klein → groß</option>
+          <option value="gefahr">Gefahr: hoch → niedrig</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="chip" id="fOpen" aria-pressed="false">Noch nicht gefunden</button>
+        <button class="chip" id="fFound" aria-pressed="false">Gefunden</button>
+        <button class="chip danger" id="fDanger" aria-pressed="false">Gefährlich (4–5)</button>
+      </div>
+      <div class="here" id="here" hidden></div>
+    </div>
+    <div class="result" id="result"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="view-route" class="wrap panel" hidden>
+    <h2>Eure Route</h2>
+    <p>Tippt auf einen Stopp, um nur die Tiere zu sehen, die es dort gibt.</p>
+    <ol class="route" id="route"></ol>
+  </section>
+
+  <section id="view-info" class="wrap panel" hidden>
+    <h2>Gefahrenstufen</h2>
+    <div class="legend" id="legend"></div>
+    <h2>Im Notfall</h2>
+    <div class="sos">
+      <div><div class="num">000</div><div>Notruf in Australien (Polizei, Feuerwehr, Rettung). Mit dem Handy geht auch 112.</div></div>
+      <ul>
+        <li><b>Schlangen, Trichternetzspinne, Blauring-Krake, Kegelschnecke:</b> Druckverband über die ganze Gliedmaße, ruhig halten, nicht laufen lassen, Notruf.</li>
+        <li><b>Würfelqualle, Irukandji:</b> Essig über die Stelle gießen (an Stränden in Queensland stehen Essigflaschen), nicht reiben, Notruf.</li>
+        <li><b>Blaue Flasche:</b> Tentakel mit Meerwasser abspülen, dann heißes Wasser. Kein Essig.</li>
+        <li><b>Steinfisch, Rotfeuerfisch, Stachelrochen:</b> Wunde in heißes Wasser (so heiß es erträglich ist), Arzt.</li>
+        <li><b>Rotrückenspinne:</b> Kühlen, Arzt. Kein Druckverband.</li>
+      </ul>
+    </div>
+    <h2>Sammlung</h2>
+    <p>Eure Funde werden nur auf diesem Handy gespeichert. Mit „Liste kopieren“ könnt ihr euren Stand in den Gruppenchat schicken.</p>
+    <div class="btnrow">
+      <button class="btn" id="copy">Liste kopieren</button>
+      <button class="btn warn" id="reset">Sammlung zurücksetzen</button>
+    </div>
+    <p class="foot">Fotos: Beobachtungen von iNaturalist-Nutzern unter Creative-Commons-Lizenz, Urheber stehen jeweils am Bild. Größen und Gewichte sind typische Werte erwachsener Tiere.</p>
+  </section>
+</main>
+
+<dialog id="dlg" aria-labelledby="dName"><div class="sheet" id="sheet"></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="data.js"></script>
+<script src="credits.js"></script>
+<script>
+(() => {
+  const KEY = "ostdex.v1";
+  const TYP = { land: "Land", wasser: "Wasser", luft: "Luft" };
+  const GEFAHR = [
+    null,
+    ["Harmlos", "Keine Gefahr für Menschen."],
+    ["Gering", "Kann kratzen, zwicken oder beißen. Abstand halten."],
+    ["Mittel", "Schmerzhaft, eventuell ärztliche Hilfe nötig."],
+    ["Hoch", "Kann schwer verletzen. Nie nähern."],
+    ["Lebensgefährlich", "Kann töten. Sofort Notruf 000."],
+  ];
+  const CREDITS = window.CREDITS || {};
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // Nummerierung wie im Pokédex: nach Größe, das größte Tier ist #001
+  const dex = [...TIERE].sort((a, b) => b.cm - a.cm || a.de.localeCompare(b.de, "de"));
+  dex.forEach((t, i) => { t.nr = i + 1; });
+  const byK = Object.fromEntries(dex.map(t => [t.k, t]));
+  const stopByK = Object.fromEntries(STOPS.map(s => [s.k, s]));
+
+  let found = {};
+  try { found = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { found = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(found)); } catch (e) {} };
+
+  const state = { q: "", typ: "", ort: "", sort: "gross", open: false, done: false, danger: false };
+  const nr = n => "#" + String(n).padStart(3, "0");
+  const img = t => `img/${t.k}.jpg`;
+  const diamond = g => `<span class="diamond d${g}" title="Gefahr ${g} von 5"><span>${g}</span></span>`;
+  const sizeShort = t => t.cm >= 100 ? (t.cm / 100).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " m" : t.cm.toLocaleString("de-DE") + " cm";
+
+  // Aktueller Stopp anhand des Datums (Reise 2026)
+  function stopToday() {
+    const d = new Date();
+    const md = (d.getMonth() + 1) * 100 + d.getDate();
+    if (d.getFullYear() !== 2026) return null;
+    for (const s of STOPS) {
+      const [a, b] = s.datum.replace(/\.$/, "").split("–").map(x => { const [dd, mm] = x.split(".").map(Number); return mm * 100 + dd; });
+      if (md >= a && md < b) return s;
+    }
+    return null;
+  }
+
+  function list() {
+    const q = state.q.trim().toLowerCase();
+    let l = dex.filter(t =>
+      (!state.typ || t.typ === state.typ) &&
+      (!state.ort || t.orte.includes(state.ort)) &&
+      (!state.open || !found[t.k]) &&
+      (!state.done || found[t.k]) &&
+      (!state.danger || t.gefahr >= 4) &&
+      (!q || [t.de, t.en, t.la, t.gruppe].join(" ").toLowerCase().includes(q))
+    );
+    const s = state.sort;
+    if (s === "klein") l.sort((a, b) => b.nr - a.nr);
+    else if (s === "gefahr") l.sort((a, b) => b.gefahr - a.gefahr || a.nr - b.nr);
+    else if (s === "name") l.sort((a, b) => a.de.localeCompare(b.de, "de"));
+    return l;
+  }
+
+  function render() {
+    const l = list();
+    $("#grid").innerHTML = l.length ? l.map(t => `
+      <button class="card${found[t.k] ? " found" : ""}" data-k="${t.k}" data-typ="${t.typ}" aria-label="${esc(t.de)}, Nummer ${t.nr}${found[t.k] ? ", gefunden" : ""}">
+        <div class="pic">
+          <img src="${img(t)}" alt="" loading="lazy" width="480" height="360">
+          <span class="nr">${nr(t.nr)}</span>
+          ${diamond(t.gefahr)}
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        </div>
+        <div class="txt">
+          <span class="de">${esc(t.de)}</span>
+          <span class="en">${esc(t.en)}</span>
+          <span class="meta"><span class="typ">${TYP[t.typ]}</span><span>${sizeShort(t)}</span></span>
+        </div>
+      </button>`).join("") : `<div class="empty">Keine Tiere für diese Auswahl.</div>`;
+    const ortTxt = state.ort ? ` in ${stopByK[state.ort].kurz}` : "";
+    const fIn = l.filter(t => found[t.k]).length;
+    $("#result").textContent = `${l.length} Tiere${ortTxt} · ${fIn} davon gefunden`;
+    counts();
+  }
+
+  function counts() {
+    const n = dex.filter(t => found[t.k]).length;
+    $("#cFound").textContent = n;
+    $("#cTotal").textContent = dex.length;
+    $("#bar").style.width = (n / dex.length * 100) + "%";
+  }
+
+  function detail(k) {
+    const t = byK[k];
+    const c = CREDITS[k];
+    const f = found[k];
+    const g = GEFAHR[t.gefahr];
+    $("#sheet").innerHTML = `
+      <div class="hero">
+        <img src="${img(t)}" alt="${esc(t.de)}">
+        <span class="nr">${nr(t.nr)}</span>
+        <button class="close" id="close" aria-label="Schließen">×</button>
+        ${c ? `<div class="credit">Foto: ${esc(c.by)} · ${esc(c.lic)} · <a href="${esc(c.url)}" target="_blank" rel="noopener">iNaturalist</a></div>` : ""}
+      </div>
+      <div class="body">
+        <div class="names">
+          <h2 id="dName">${esc(t.de)}</h2>
+          <div class="en2">${esc(t.en)}</div>
+          <div class="la">${esc(t.la)}</div>
+        </div>
+        <div class="tags">
+          <span class="tag typ ${t.typ}">${TYP[t.typ]}</span>
+          <span class="tag">${esc(t.gruppe)}</span>
+          <span class="tag">Chance: ${esc(t.chance)}</span>
+        </div>
+        <div class="gefahr d${t.gefahr}">
+          <div class="head">${diamond(t.gefahr).replace('class="diamond', 'style="position:relative" class="diamond')}<span class="lbl">Gefahr ${t.gefahr}/5 · ${g[0]}</span>
+            <span class="scale" aria-hidden="true">${[1,2,3,4,5].map(i => `<i class="${i <= t.gefahr ? "on" : ""}"></i>`).join("")}</span></div>
+          <p>${esc(t.tipp)}</p>
+        </div>
+        <dl class="facts">
+          <dt>Größe</dt><dd>${esc(t.groesse)}</dd>
+          <dt>Gewicht</dt><dd>${esc(t.gewicht)}</dd>
+          <dt>Nahrung</dt><dd>${esc(t.essen)}</dd>
+        </dl>
+        <p class="fun">${esc(t.fakt)}</p>
+        <div class="where">
+          <div class="wl">Auf eurer Route</div>
+          <div class="stops">${STOPS.filter(s => t.orte.includes(s.k)).map(s => `<span class="tag">${esc(s.kurz)}</span>`).join("")}</div>
+        </div>
+        <button class="collect${f ? " on" : ""}" id="collect">${f ? "✓ Gefunden" : "Gefunden!"}</button>
+        ${f ? `<div class="when">Abgehakt am ${new Date(f.d).toLocaleDateString("de-DE", { day: "numeric", month: "long" })}${f.ort ? " · " + esc(stopByK[f.ort]?.kurz || "") : ""} · nochmal tippen zum Entfernen</div>` : ""}
+      </div>`;
+    $("#close").onclick = () => $("#dlg").close();
+    $("#collect").onclick = () => toggle(k);
+    if (!$("#dlg").open) { $("#dlg").showModal(); $("#sheet").scrollTop = 0; }
+  }
+
+  function toggle(k) {
+    if (found[k]) delete found[k];
+    else {
+      const s = stopToday();
+      found[k] = { d: new Date().toISOString(), ort: s ? s.k : "" };
+      toast(`${byK[k].de} gefunden! ${Object.keys(found).length}/${dex.length}`);
+    }
+    save();
+    detail(k);
+    render();
+    renderRoute();
+  }
+
+  let tt;
+  function toast(msg) {
+    const el = $("#toast");
+    el.textContent = msg; el.classList.add("show");
+    clearTimeout(tt); tt = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  function renderRoute() {
+    const now = stopToday();
+    $("#route").innerHTML = STOPS.map((s, i) => {
+      const here = dex.filter(t => t.orte.includes(s.k));
+      const n = here.filter(t => found[t.k]).length;
+      return `<li class="${now && now.k === s.k ? "now" : ""}">
+        <span class="pin"><b>${i + 1}</b></span>
+        <button class="stop" data-ort="${s.k}">
+          <strong>${esc(s.name)}</strong>
+          <span class="d">${s.datum}${now && now.k === s.k ? " · ihr seid hier" : ""}</span>
+          <span class="p"><span class="bar"><i style="width:${here.length ? n / here.length * 100 : 0}%"></i></span>${n}/${here.length} Tiere</span>
+        </button>
+      </li>`;
+    }).join("");
+  }
+
+  function setView(v) {
+    for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.view === v);
+    for (const id of ["dex", "route", "info"]) $("#view-" + id).hidden = id !== v;
+    window.scrollTo(0, 0);
+  }
+
+  function setOrt(k) {
+    state.ort = k; $("#ort").value = k; render();
+  }
+
+  // Aufbau
+  $("#ort").insertAdjacentHTML("beforeend", STOPS.map(s => `<option value="${s.k}">${esc(s.kurz)} (${s.datum})</option>`).join(""));
+  $("#legend").innerHTML = GEFAHR.slice(1).map((g, i) => `<div><span class="diamond d${i + 1}"><span>${i + 1}</span></span><span><b>${g[0]}</b><small>${g[1]}</small></span></div>`).join("");
+
+  const now = stopToday();
+  if (now) {
+    $("#here").hidden = false;
+    $("#here").innerHTML = `<span>Ihr seid gerade in <b>${esc(now.kurz)}</b>.</span><button class="chip" id="hereBtn" aria-pressed="false">Tiere hier zeigen</button>`;
+    $("#hereBtn").onclick = e => { const on = state.ort !== now.k; setOrt(on ? now.k : ""); e.currentTarget.setAttribute("aria-pressed", on); };
+  }
+
+  $("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
+  $("#typ").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state.typ = b.dataset.typ;
+    for (const x of $("#typ").children) x.setAttribute("aria-pressed", x === b);
+    render();
+  });
+  $("#ort").addEventListener("change", e => setOrt(e.target.value));
+  $("#sort").addEventListener("change", e => { state.sort = e.target.value; render(); });
+  const chip = (id, key, other) => $(id).addEventListener("click", e => {
+    state[key] = !state[key]; e.currentTarget.setAttribute("aria-pressed", state[key]);
+    if (other && state[key]) { state[other] = false; $(other === "open" ? "#fOpen" : "#fFound").setAttribute("aria-pressed", false); }
+    render();
+  });
+  chip("#fOpen", "open", "done"); chip("#fFound", "done", "open"); chip("#fDanger", "danger");
+
+  $("#grid").addEventListener("click", e => { const c = e.target.closest(".card"); if (c) detail(c.dataset.k); });
+  $("#dlg").addEventListener("click", e => { if (e.target === $("#dlg")) $("#dlg").close(); });
+  document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setView(b.dataset.view); });
+  $("#route").addEventListener("click", e => { const b = e.target.closest(".stop"); if (b) { setOrt(b.dataset.ort); setView("dex"); } });
+
+  $("#copy").addEventListener("click", () => {
+    const got = dex.filter(t => found[t.k]);
+    const txt = `Ostküsten-Dex: ${got.length}/${dex.length} gefunden\n` + got.map(t => `${nr(t.nr)} ${t.de}`).join("\n");
+    const fallback = () => { $("#q").value = txt; toast("Kopieren nicht erlaubt – Liste steht im Suchfeld"); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast("Liste kopiert"), fallback); else fallback();
+  });
+  let armed = false;
+  $("#reset").addEventListener("click", e => {
+    if (!armed) { armed = true; e.currentTarget.textContent = "Wirklich alles löschen?"; setTimeout(() => { armed = false; $("#reset").textContent = "Sammlung zurücksetzen"; }, 4000); return; }
+    found = {}; save(); armed = false; e.currentTarget.textContent = "Sammlung zurücksetzen";
+    render(); renderRoute(); toast("Sammlung gelöscht");
+  });
+
+  render();
+  renderRoute();
+})();
+</script>
+<!-- app:end -->
+</body>
+</html>
